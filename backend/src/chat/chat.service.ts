@@ -6,6 +6,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Chat } from './chat.entity';
 
+const USER_ROLE = 'user';
+
 @Injectable()
 export class ChatService {
   constructor(
@@ -28,24 +30,33 @@ export class ChatService {
   async createChat(
     userId: string,
     startDate: Date,
-    message: ChatCompletionMessageDto,
+    message: string,
   ): Promise<Chat> {
-    const openaiResponse = await this.createChatCompletion([message]);
+    const userMessage = {
+      role: USER_ROLE,
+      content: message,
+    };
+    const openaiResponse = await this.createChatCompletion([userMessage]);
     const chat = this.chatRepository.create({
       userId,
       startDate,
-      messages: [message, openaiResponse],
+      messages: [userMessage, openaiResponse],
     });
     return this.chatRepository.save(chat);
   }
 
-  async updateChat(
-    id: number,
-    messages: ChatCompletionMessageDto[],
-  ): Promise<Chat> {
-    const openaiResponse = await this.createChatCompletion(messages);
+  async updateChat(id: number, message: string): Promise<Chat> {
+    const chat = await this.chatRepository.findOne({ where: { id } });
+    const userMessage = {
+      role: USER_ROLE,
+      content: message,
+    };
+    const openaiResponse = await this.createChatCompletion([
+      ...chat.messages,
+      userMessage,
+    ]);
     await this.chatRepository.update(id, {
-      messages: [...messages, openaiResponse],
+      messages: [...chat.messages, userMessage, openaiResponse],
     });
     return this.chatRepository.findOne({ where: { id } });
   }

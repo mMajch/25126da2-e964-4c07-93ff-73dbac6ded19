@@ -22,7 +22,7 @@ export class ChatController {
   createChat(
     @Body()
     chatData: {
-      message: ChatCompletionMessageDto;
+      message: string;
     },
   ): Promise<Chat> {
     return this.chatService.createChat(userId, new Date(), chatData.message);
@@ -31,8 +31,11 @@ export class ChatController {
   @Put(':id')
   updateChat(
     @Param('id') id: number,
-    @Body() messages: ChatCompletionMessageDto[],
+    @Body()
+    chatData: {
+      message: string;
+    },
   ): Promise<Chat> {
-    return this.chatService.updateChat(id, messages);
+    return this.chatService.updateChat(id, chatData.message);
   }
 }
