@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { OpenaiModule } from './openai/openai.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
-  imports: [ConfigModule.forRoot(), OpenaiModule],
+  imports: [ConfigModule.forRoot(), ChatModule],
   controllers: [],
   providers: [],
 })

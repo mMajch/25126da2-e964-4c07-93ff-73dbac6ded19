@@ -16,3 +16,19 @@ export default async function createChatCompletion(
     });
     return response.json();
 }
+
+export async function createChat(
+    id: string,
+    messages: ChatCompletionMessage[]
+) {
+    const response = await fetch(`${process.env.API_URL}/chats/${id}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            messages,
+        }),
+    });
+    return response.json();
+}
