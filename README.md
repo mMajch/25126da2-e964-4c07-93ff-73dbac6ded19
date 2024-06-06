@@ -43,3 +43,4 @@ A few things that should be worked on if the app would be deployed to users:
 - error handling
 - reusing models between frontend and backend
 - loading states
+- tests
