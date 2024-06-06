@@ -80,10 +80,11 @@ export default function Home() {
     return (
         <div className="h-screen flex flex-col md:flex-row">
             {/* Sidebar */}
-            <div className={`overflow-y-auto fixed md:static inset-y-0 left-0 z-50 w-64 bg-gray-800 text-white transition-transform transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
+            <div
+                className={`overflow-y-auto fixed md:static inset-y-0 left-0 z-50 w-64 bg-gray-200 text-gray-800 transition-transform transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
                 <div className="p-4">
                     <button
-                        className="w-full flex items-center mb-4 p-2 rounded hover:bg-gray-700"
+                        className="w-full flex items-center mb-4 p-2 rounded hover:bg-gray-300"
                         onClick={handleNewChat}
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
@@ -92,15 +93,15 @@ export default function Home() {
                         </svg>
                         Ask new question
                     </button>
-                    <h2 className="text-xl font-bold mb-4">Chats</h2>
+                    {!!chats.length && (<h2 className="text-xl font-bold mb-4">Your chats</h2>)}
                     <ul>
-                        {chats.map(chat => (
+                    {chats.map(chat => (
                             <li key={chat.id}
-                                className={`mb-2 ${currentChat?.id === chat.id ? 'border border-blue-500' : ''}`}
+                                className={`mb-2 ${currentChat?.id === chat.id ? 'bg-blue-300 rounded' : ''}`}
                             >
-                                <a href="#" className="block p-2 rounded hover:bg-gray-700"
+                                <a href="#" className="block p-2 rounded hover:bg-gray-300"
                                    onClick={() => fetchChatMessages(chat.id)}>
-                                    Chat {chat.id} - {chat.startDate.toString()}
+                                    Chat id: {chat.id} <br /> {new Date(chat.startDate).toLocaleString()}
                                 </a>
                             </li>
                         ))}
@@ -111,7 +112,7 @@ export default function Home() {
             {/* Main Content */}
             <div className="flex-1 flex flex-col">
                 {/* Hamburger Menu */}
-                <div className="md:hidden p-4 bg-gray-800 text-white">
+                <div className="md:hidden p-4 bg-gray-200 text-gray-800">
                     <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-xl">
                         &#9776;
                     </button>
@@ -119,33 +120,33 @@ export default function Home() {
 
                 <div className="overflow-y-auto justify-end flex flex-col flex-1 gap-10 container mx-auto p-4">
 
-                        <div className="flex flex-col gap-3 overflow-y-auto ">
-                                {messages?.map((message, index) => (
-                                    <div
-                                        key={index}
-                                        className={message.role === "assistant" ? "chat chat-start" : "chat chat-end"}
-                                    >
-                                        <div className="chat-bubble">
-                                            <p>{message.content}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                            <div ref={messagesEndRef}></div> {/* Add this div */}
+                    <div className="flex flex-col gap-3 overflow-y-auto ">
+                        {messages?.map((message, index) => (
+                            <div
+                                key={index}
+                                className={message.role === "assistant" ? "chat chat-start" : "chat chat-end"}
+                            >
+                                <div className="chat-bubble bg-gray-200 text-gray-800">
+                                    <p>{message.content}</p>
+                                </div>
+                            </div>
+                        ))}
+                        <div ref={messagesEndRef}></div>
 
-                        </div>
-                            <input
-                                ref={inputRef}
-                                type="text"
-                                placeholder="What is your question?"
-                                value={message}
-                                onChange={(event) => setMessage(event.target.value)}
-                                onKeyDown={async (event) => {
-                                    if (event.key === "Enter" && !loading) {
-                                        await handleMessage();
-                                    }
-                                }}
-                                className="input input-bordered p-5  "
-                            />
+                    </div>
+                    <input
+                        ref={inputRef}
+                        type="text"
+                        placeholder="What is your question?"
+                        value={message}
+                        onChange={(event) => setMessage(event.target.value)}
+                        onKeyDown={async (event) => {
+                            if (event.key === "Enter" && !loading) {
+                                await handleMessage();
+                            }
+                        }}
+                        className="input input-bordered p-5 text-gray-800 bg-white"
+                    />
 
                 </div>
             </div>
