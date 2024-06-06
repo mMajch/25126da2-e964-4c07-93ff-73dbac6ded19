@@ -1,34 +1,53 @@
 "use client";
 
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import {ChatMessage, Chat, ChatDetails} from "./models";
 import { createChat, updateChat, getChats, getChat } from "./actions";
 
 export default function Home() {
+    const inputRef = useRef<HTMLInputElement>(null);
     const [chats, setChats] = useState<Chat[]>([]);
     const [currentChat, setCurrentChat] = useState<ChatDetails>();
     const [message, setMessage] = useState("");
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
-    useEffect(() => {
-        const fetchChats = async () => {
-            const fetchedChats = await getChats();
-            setChats(fetchedChats);
-        };
+    const fetchChats = () => getChats().then(data => setChats(data)).catch(() => {
+        // TODO error handling
+    });
 
-        fetchChats();
+    useEffect(() => {
+        fetchChats()
     }, []);
 
+    const handleNewChat = () => {
+        setCurrentChat(undefined)
+        setSidebarOpen(false);
+        if (inputRef.current) {
+            inputRef.current.focus();
+        }
+    }
 
     const handleMessage = async () => {
+        setCurrentChat((current) => {
+            if (current) {
+                return ({ ...current, messages: [...current?.messages, { role: "user", content: message}]})
+            }
+            return current
+
+        })
+
         if (currentChat){
+
+            setMessage("")
             const newChatDetails = await updateChat(currentChat?.id, message)
-            console.log(newChatDetails)
+            setCurrentChat(newChatDetails)
+
+        }
+        else {
+            const newChatDetails = await createChat(message)
             setCurrentChat(newChatDetails)
             setMessage("")
-        }
-        else{
-            //create new chat
+            fetchChats()
         }
     };
 
@@ -41,13 +60,26 @@ export default function Home() {
     return (
         <div className="h-screen flex flex-col md:flex-row">
             {/* Sidebar */}
-            <div className={`fixed md:static inset-y-0 left-0 z-50 w-64 bg-gray-800 text-white transition-transform transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
+            <div className={`overflow-y-auto fixed md:static inset-y-0 left-0 z-50 w-64 bg-gray-800 text-white transition-transform transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
                 <div className="p-4">
+                    <button
+                        className="w-full flex items-center mb-4 p-2 rounded hover:bg-gray-700"
+                        onClick={handleNewChat}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
+                             stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Ask new question
+                    </button>
                     <h2 className="text-xl font-bold mb-4">Chats</h2>
                     <ul>
                         {chats.map(chat => (
-                            <li key={chat.id} className="mb-2">
-                                <a href="#" className="block p-2 rounded hover:bg-gray-700" onClick={() => fetchChatMessages(chat.id)}>
+                            <li key={chat.id}
+                                className={`mb-2 ${currentChat?.id === chat.id ? 'border border-blue-500' : ''}`}
+                            >
+                                <a href="#" className="block p-2 rounded hover:bg-gray-700"
+                                   onClick={() => fetchChatMessages(chat.id)}>
                                     Chat {chat.id} - {chat.startDate.toString()}
                                 </a>
                             </li>
@@ -57,7 +89,7 @@ export default function Home() {
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col">
+            <div className="overflow-y-auto flex-1 flex flex-col">
                 {/* Hamburger Menu */}
                 <div className="md:hidden p-4 bg-gray-800 text-white">
                     <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-xl">
@@ -67,8 +99,8 @@ export default function Home() {
 
                 <div className="flex flex-col items-center justify-center flex-1 gap-10 container mx-auto p-4">
 
-                        <>
-                            <div className="flex flex-col gap-3 h-[75%] overflow-scroll w-full">
+                    <>
+                        <div className="flex flex-col gap-3 h-[75%] overflow-scroll w-full">
                                 {currentChat?.messages.map((message, index) => (
                                     <div
                                         key={index}
@@ -81,6 +113,7 @@ export default function Home() {
                                 ))}
                             </div>
                             <input
+                                ref={inputRef}
                                 type="text"
                                 placeholder="Message"
                                 value={message}
