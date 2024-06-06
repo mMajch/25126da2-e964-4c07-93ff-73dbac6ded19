@@ -12,6 +12,18 @@ export default function Home() {
     const [message, setMessage] = useState("");
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const scrollToBottom = () => {
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+    };
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
+
     const fetchChats = () => getChats().then(data => {
         const orderedChats = data.sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
         setChats(orderedChats)
@@ -93,7 +105,7 @@ export default function Home() {
             </div>
 
             {/* Main Content */}
-            <div className="overflow-y-auto flex-1 flex flex-col">
+            <div className="flex-1 flex flex-col">
                 {/* Hamburger Menu */}
                 <div className="md:hidden p-4 bg-gray-800 text-white">
                     <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-xl">
@@ -101,10 +113,10 @@ export default function Home() {
                     </button>
                 </div>
 
-                <div className="flex flex-col items-center justify-center flex-1 gap-10 container mx-auto p-4">
+                <div className="overflow-y-auto justify-end flex flex-col flex-1 gap-10 container mx-auto p-4">
 
                     <>
-                        <div className="flex flex-col gap-3 h-[75%] overflow-scroll w-full">
+                        <div className="flex flex-col gap-3 overflow-y-auto ">
                                 {messages?.map((message, index) => (
                                     <div
                                         key={index}
@@ -115,7 +127,9 @@ export default function Home() {
                                         </div>
                                     </div>
                                 ))}
-                            </div>
+                            <div ref={messagesEndRef}></div> {/* Add this div */}
+
+                        </div>
                             <input
                                 ref={inputRef}
                                 type="text"
@@ -127,7 +141,7 @@ export default function Home() {
                                         await handleMessage();
                                     }
                                 }}
-                                className="input input-bordered w-full m-10"
+                                className="input input-bordered p-5  "
                             />
                         </>
 
