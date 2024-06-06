@@ -1,7 +1,7 @@
 This is an AI chatbot application created with [Next.js](https://nextjs.org/) and [Nest](https://github.com/nestjs/nest). The chatbot history is stored in a local sqlite database.
 All responses are generated using the OpenAI API and enriched with a use case specific prompt.
 
-Check out the [demo video](demo.mov) to see it in action.
+Check out the [demo video](demo.mp4) to see it in action.
 
 ## Running the application
 
