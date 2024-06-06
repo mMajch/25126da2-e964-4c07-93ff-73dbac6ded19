@@ -11,7 +11,10 @@ export default function Home() {
     const [message, setMessage] = useState("");
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
-    const fetchChats = () => getChats().then(data => setChats(data)).catch(() => {
+    const fetchChats = () => getChats().then(data => {
+        const orderedChats = data.sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
+        setChats(orderedChats)
+    }).catch(() => {
         // TODO error handling
     });
 
@@ -32,21 +35,20 @@ export default function Home() {
             if (current) {
                 return ({ ...current, messages: [...current?.messages, { role: "user", content: message}]})
             }
-            return current
+            return ({
+             messages: [{ role: "user", content: message}]
+            })
 
         })
 
+        setMessage("")
         if (currentChat){
-
-            setMessage("")
             const newChatDetails = await updateChat(currentChat?.id, message)
             setCurrentChat(newChatDetails)
-
         }
         else {
             const newChatDetails = await createChat(message)
             setCurrentChat(newChatDetails)
-            setMessage("")
             fetchChats()
         }
     };

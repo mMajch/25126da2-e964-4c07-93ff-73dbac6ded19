@@ -4,7 +4,7 @@ export interface ChatMessage {
 }
 
 export interface Chat {
-    startDate: Date,
+    startDate: string,
     id: number
 }
 

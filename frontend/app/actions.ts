@@ -1,9 +1,9 @@
 "use server";
 
-import {ChatMessage} from "./models";
+import {Chat, ChatDetails, ChatMessage} from "./models";
 
 export async function getChats(
-) {
+) : Promise<Chat[]> {
     const response = await fetch(`${process.env.API_URL}/chats`, {
         method: "GET",
         headers: {
@@ -14,7 +14,7 @@ export async function getChats(
 }
 
 export async function getChat(id: number
-) {
+) : Promise<ChatDetails> {
     const response = await fetch(`${process.env.API_URL}/chats/${id}`, {
         method: "GET",
         headers: {
@@ -26,7 +26,7 @@ export async function getChat(id: number
 
 export async function createChat(
     message: string
-) {
+) : Promise<ChatDetails> {
     const response = await fetch(`${process.env.API_URL}/chats`, {
         method: "POST",
         headers: {
@@ -42,7 +42,7 @@ export async function createChat(
 export async function updateChat(
     id: number,
     message: string
-) {
+): Promise<ChatDetails> {
     const response = await fetch(`${process.env.API_URL}/chats/${id}`, {
         method: "PUT",
         headers: {
