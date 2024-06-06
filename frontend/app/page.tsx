@@ -10,6 +10,7 @@ export default function Home() {
     const [currentChat, setCurrentChat] = useState<Chat>();
     const [messages, setMessages] = useState<ChatMessage[]>();
     const [message, setMessage] = useState("");
+    const [loading, setLoading] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -45,11 +46,12 @@ export default function Home() {
     }
 
     const handleMessage = async () => {
+        setLoading(true)
         setMessages((messages) => {
             if (messages) {
-                return ( [...messages, { role: "user", content: message}])
+                return ( [...messages, { role: "user", content: message}, {role: "assistant", content: "..."}])
             }
-            return ( [{ role: "user", content: message}])
+            return ( [{ role: "user", content: message}, {role: "assistant", content: "..."}])
         })
 
         setMessage("")
@@ -57,6 +59,7 @@ export default function Home() {
             const newChatDetails = await updateChat(currentChat?.id, message)
             setCurrentChat(newChatDetails)
             setMessages(newChatDetails.messages)
+
         }
         else {
             const newChatDetails = await createChat(message)
@@ -64,6 +67,7 @@ export default function Home() {
             setMessages(newChatDetails.messages)
             await fetchChats()
         }
+        setLoading(false)
     };
 
     const fetchChatMessages = async (chatId: number) => {
@@ -115,7 +119,6 @@ export default function Home() {
 
                 <div className="overflow-y-auto justify-end flex flex-col flex-1 gap-10 container mx-auto p-4">
 
-                    <>
                         <div className="flex flex-col gap-3 overflow-y-auto ">
                                 {messages?.map((message, index) => (
                                     <div
@@ -133,17 +136,16 @@ export default function Home() {
                             <input
                                 ref={inputRef}
                                 type="text"
-                                placeholder="Message"
+                                placeholder="What is your question?"
                                 value={message}
                                 onChange={(event) => setMessage(event.target.value)}
                                 onKeyDown={async (event) => {
-                                    if (event.key === "Enter") {
+                                    if (event.key === "Enter" && !loading) {
                                         await handleMessage();
                                     }
                                 }}
                                 className="input input-bordered p-5  "
                             />
-                        </>
 
                 </div>
             </div>
