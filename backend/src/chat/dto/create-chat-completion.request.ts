@@ -1,20 +1,4 @@
-import { Type } from 'class-transformer';
-import {
-  ArrayNotEmpty,
-  IsArray,
-  IsNotEmpty,
-  IsString,
-  ValidateNested,
-} from 'class-validator';
-
-export class CreateChatCompletionRequest {
-  @ArrayNotEmpty({ always: true })
-  @IsArray()
-  @IsNotEmpty()
-  @ValidateNested({ each: true })
-  @Type(() => ChatCompletionMessageDto)
-  messages: ChatCompletionMessageDto[];
-}
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class ChatCompletionMessageDto {
   @IsString()

@@ -27,7 +27,8 @@ export class ChatService {
   }
 
   async getChatById(id: number): Promise<Chat> {
-    return this.chatRepository.findOne({ where: { id } });
+    const chat = await this.chatRepository.findOne({ where: { id } });
+    return this.stripChatFromPrompt(chat);
   }
 
   async createChat(
