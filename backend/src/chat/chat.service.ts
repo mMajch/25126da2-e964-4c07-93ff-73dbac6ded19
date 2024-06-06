@@ -6,7 +6,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Chat } from './chat.entity';
 
-const USER_ROLE = 'user';
+enum ROLE {
+  USER = 'user',
+  SYSTEM = 'system',
+}
 
 @Injectable()
 export class ChatService {
@@ -32,23 +35,31 @@ export class ChatService {
     startDate: Date,
     message: string,
   ): Promise<Chat> {
+    const prompt = {
+      role: ROLE.SYSTEM,
+      content:
+        'You are a helpful and friendly chatbot designed to assist older users. Use simple, clear language and be patient. Avoid using technical jargon. Always be polite, respectful, and supportive. Use short sentences and offer assistance proactively.',
+    };
     const userMessage = {
-      role: USER_ROLE,
+      role: ROLE.USER,
       content: message,
     };
-    const openaiResponse = await this.createChatCompletion([userMessage]);
+    const messages = [prompt, userMessage];
+    const openaiResponse = await this.createChatCompletion(messages);
     const chat = this.chatRepository.create({
       userId,
       startDate,
-      messages: [userMessage, openaiResponse],
+      messages: [...messages, openaiResponse],
     });
-    return this.chatRepository.save(chat);
+
+    const savedChat = await this.chatRepository.save(chat);
+    return this.stripChatFromPrompt(savedChat);
   }
 
   async updateChat(id: number, message: string): Promise<Chat> {
     const chat = await this.chatRepository.findOne({ where: { id } });
     const userMessage = {
-      role: USER_ROLE,
+      role: ROLE.USER,
       content: message,
     };
     const openaiResponse = await this.createChatCompletion([
@@ -58,7 +69,9 @@ export class ChatService {
     await this.chatRepository.update(id, {
       messages: [...chat.messages, userMessage, openaiResponse],
     });
-    return this.chatRepository.findOne({ where: { id } });
+
+    const savedChat = await this.chatRepository.findOne({ where: { id } });
+    return this.stripChatFromPrompt(savedChat);
   }
 
   async createChatCompletion(messages: ChatCompletionMessageDto[]) {
@@ -71,6 +84,14 @@ export class ChatService {
     return {
       role: choice?.message.role,
       content: choice?.message.content,
+    };
+  }
+
+  // we do not want frontend to see the prompt
+  stripChatFromPrompt(chat: Chat) {
+    return {
+      ...chat,
+      messages: chat.messages.filter(({ role }) => role !== ROLE.SYSTEM),
     };
   }
 }

@@ -7,7 +7,8 @@ import { createChat, updateChat, getChats, getChat } from "./actions";
 export default function Home() {
     const inputRef = useRef<HTMLInputElement>(null);
     const [chats, setChats] = useState<Chat[]>([]);
-    const [currentChat, setCurrentChat] = useState<ChatDetails>();
+    const [currentChat, setCurrentChat] = useState<Chat>();
+    const [messages, setMessages] = useState<ChatMessage[]>();
     const [message, setMessage] = useState("");
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -24,6 +25,7 @@ export default function Home() {
 
     const handleNewChat = () => {
         setCurrentChat(undefined)
+        setMessages(undefined)
         setSidebarOpen(false);
         if (inputRef.current) {
             inputRef.current.focus();
@@ -31,25 +33,24 @@ export default function Home() {
     }
 
     const handleMessage = async () => {
-        setCurrentChat((current) => {
-            if (current) {
-                return ({ ...current, messages: [...current?.messages, { role: "user", content: message}]})
+        setMessages((messages) => {
+            if (messages) {
+                return ( [...messages, { role: "user", content: message}])
             }
-            return ({
-             messages: [{ role: "user", content: message}]
-            })
-
+            return ( [{ role: "user", content: message}])
         })
 
         setMessage("")
         if (currentChat){
             const newChatDetails = await updateChat(currentChat?.id, message)
             setCurrentChat(newChatDetails)
+            setMessages(newChatDetails.messages)
         }
         else {
             const newChatDetails = await createChat(message)
             setCurrentChat(newChatDetails)
-            fetchChats()
+            setMessages(newChatDetails.messages)
+            await fetchChats()
         }
     };
 
@@ -57,6 +58,7 @@ export default function Home() {
         setSidebarOpen(false);
         const chatDetails: ChatDetails = await getChat(chatId)
         setCurrentChat(chatDetails);
+        setMessages(chatDetails.messages);
     };
 
     return (
@@ -103,10 +105,10 @@ export default function Home() {
 
                     <>
                         <div className="flex flex-col gap-3 h-[75%] overflow-scroll w-full">
-                                {currentChat?.messages.map((message, index) => (
+                                {messages?.map((message, index) => (
                                     <div
                                         key={index}
-                                        className={message.role === "user" ? "chat chat-start" : "chat chat-end"}
+                                        className={message.role === "assistant" ? "chat chat-start" : "chat chat-end"}
                                     >
                                         <div className="chat-bubble">
                                             <p>{message.content}</p>
