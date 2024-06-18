@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@tailwindcss/typography": "^0.5.13",
+    "assemblyai": "^4.5.0",
+    "axios": "^1.7.2",
     "daisyui": "^4.11.1",
     "next": "14.2.3",
     "react": "^18",

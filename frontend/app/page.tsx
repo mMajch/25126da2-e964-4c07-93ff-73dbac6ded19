@@ -1,10 +1,16 @@
 "use client";
+import { AssemblyAI } from 'assemblyai'
 
 import {useEffect, useRef, useState} from "react";
 import {ChatMessage, Chat, ChatDetails} from "./models";
 import { createChat, updateChat, getChats, getChat } from "./actions";
 
+const client = new AssemblyAI({
+    apiKey: "df0ffa09c65147adb784ba334d2b34f0"
+})
+
 export default function Home() {
+
     const inputRef = useRef<HTMLInputElement>(null);
     const [chats, setChats] = useState<Chat[]>([]);
     const [currentChat, setCurrentChat] = useState<Chat>();
@@ -12,6 +18,51 @@ export default function Home() {
     const [message, setMessage] = useState("");
     const [loading, setLoading] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    const [isRecording, setIsRecording] = useState(false);
+    const [audioBlob, setAudioBlob] = useState(null);
+    const [transcription, setTranscription] = useState('');
+    const mediaRecorderRef = useRef(null);
+    const chunks = useRef([]);
+
+    const startRecording = async () => {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorderRef.current = new MediaRecorder(stream);
+        mediaRecorderRef.current.ondataavailable = (event) => {
+            chunks.current.push(event.data);
+        };
+        mediaRecorderRef.current.onstop = () => {
+            const blob = new Blob(chunks.current, { type: 'audio/wav' });
+            setAudioBlob(blob);
+            chunks.current = [];
+        };
+        mediaRecorderRef.current.start();
+        setIsRecording(true);
+    };
+
+    const stopRecording = () => {
+        mediaRecorderRef.current.stop();
+        setIsRecording(false);
+    };
+
+    const transcribeAudio = async () => {
+        if (!audioBlob) return;
+
+        // const formData = new FormData();
+        // formData.append('file', audioBlob);
+
+        const config = {
+            audio_url: audioBlob
+        }
+
+       try {
+           const transcript = await client.transcripts.transcribe(config)
+           console.log(transcript)
+
+        } catch (error) {
+            console.error('Error transcribing audio:', error);
+        }
+    };
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -147,6 +198,12 @@ export default function Home() {
                         }}
                         className="input input-bordered p-5 text-gray-800 bg-white"
                     />
+
+                    <button onClick={isRecording ? stopRecording : startRecording}>
+                        {isRecording ? 'Stop Recording' : 'Start Recording'}
+                    </button>
+                    {audioBlob && <button onClick={transcribeAudio}>Transcribe</button>}
+                    {transcription && <p>Transcription: {transcription}</p>}
 
                 </div>
             </div>
