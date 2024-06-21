@@ -4,6 +4,18 @@ import { AssemblyAI } from 'assemblyai'
 import {useEffect, useRef, useState} from "react";
 import {ChatMessage, Chat, ChatDetails} from "./models";
 import { createChat, updateChat, getChats, getChat } from "./actions";
+import {
+    FaMicrophone,
+    FaPaperPlane,
+    FaTrash,
+    FaStop,
+    FaWaveSquare,
+    FaXingSquare,
+    FaXing,
+    FaWindowClose
+} from 'react-icons/fa';
+import {FaX} from "react-icons/fa6";
+
 
 const client = new AssemblyAI({
     apiKey: "df0ffa09c65147adb784ba334d2b34f0"
@@ -34,6 +46,7 @@ export default function Home() {
         mediaRecorderRef.current.onstop = () => {
             const blob = new Blob(chunks.current, { type: 'audio/wav' });
             setAudioBlob(blob);
+            transcribeAudio(blob)
             chunks.current = [];
         };
         mediaRecorderRef.current.start();
@@ -45,19 +58,34 @@ export default function Home() {
         setIsRecording(false);
     };
 
-    const transcribeAudio = async () => {
-        if (!audioBlob) return;
+    const blobToBase64 = (blob) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                resolve(reader.result);
+            };
+            reader.onerror = (error) => reject(error);
+            reader.readAsDataURL(blob);
+        });
+    };
+
+    const transcribeAudio = async (blob) => {
+
+        if (!blob) return;
 
         // const formData = new FormData();
-        // formData.append('file', audioBlob);
-
+        // formData.append('file', audioBlob, 'recording.mp4');
+        const base = await blobToBase64(blob)
+        const full = base
+        console.log(full)
         const config = {
-            audio_url: audioBlob
+            audio: full
         }
 
        try {
            const transcript = await client.transcripts.transcribe(config)
-           console.log(transcript)
+           const text = transcript.words?.map((word) => word.text).join(' ')
+           await handleMessage(text)
 
         } catch (error) {
             console.error('Error transcribing audio:', error);
@@ -96,7 +124,7 @@ export default function Home() {
         }
     }
 
-    const handleMessage = async () => {
+    const handleMessage = async (message: string) => {
         setLoading(true)
         setMessages((messages) => {
             if (messages) {
@@ -127,6 +155,10 @@ export default function Home() {
         setCurrentChat(chatDetails);
         setMessages(chatDetails.messages);
     };
+
+    const  handleEnter = async () => {
+        await handleMessage()
+    }
 
     return (
         <div className="h-screen flex flex-col md:flex-row">
@@ -185,26 +217,48 @@ export default function Home() {
                         <div ref={messagesEndRef}></div>
 
                     </div>
-                    <input
-                        ref={inputRef}
-                        type="text"
-                        placeholder="What is your question?"
-                        value={message}
-                        onChange={(event) => setMessage(event.target.value)}
-                        onKeyDown={async (event) => {
-                            if (event.key === "Enter" && !loading) {
-                                await handleMessage();
-                            }
-                        }}
-                        className="input input-bordered p-5 text-gray-800 bg-white"
-                    />
+                    <div>
+                    <div className={`row flex p-2 ${isRecording ? 'bg-red-100' : ''} rounded-full`}>
+                        {!!isRecording ? (
+                            <div className="row flex w-full">
+                                <button
+                                    onClick={() => null}
+                                    className=" mr-auto bg-red-500 text-white rounded-full p-4 flex items-center justify-center"
+                                >
+                                    <FaX size={16}/>
+                                </button>
+                                <div className="flex-col content-center  mr-auto align-items">
+                                    <p className="text-red-500">Jezt sprechen, Lotti hor zu</p>
+                                </div>
+                            </div>
 
-                    <button onClick={isRecording ? stopRecording : startRecording}>
-                        {isRecording ? 'Stop Recording' : 'Start Recording'}
-                    </button>
-                    {audioBlob && <button onClick={transcribeAudio}>Transcribe</button>}
-                    {transcription && <p>Transcription: {transcription}</p>}
+                        ): (
 
+                            <input
+                                ref={inputRef}
+                                type="text"
+                                placeholder="What is your question?"
+                                value={message}
+                                onChange={(event) => setMessage(event.target.value)}
+                                onKeyDown={async (event) => {
+                                    if (event.key === "Enter" && !loading) {
+                                        await handleMessage(message);
+                                    }
+                                }}
+                                className="w-full mr-5 input rounded-full input-bordered p-3 text-gray-800 bg-white"
+                            />
+
+
+                        )}
+
+                        <button
+                            onClick={message ? handleEnter : isRecording ?  stopRecording : startRecording}
+                            className="ml-auto bg-blue-500 text-white rounded-full p-4 flex items-center justify-center"
+                        >
+                            {message ? <FaPaperPlane size={16}/> : isRecording ? <FaPaperPlane size={16}/> : <FaMicrophone size={16}/>}
+                        </button>
+                    </div>
+                    </div>
                 </div>
             </div>
         </div>

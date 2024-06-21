@@ -1,6 +1,13 @@
 "use server";
 
 import {Chat, ChatDetails, ChatMessage} from "./models";
+import {AssemblyAI} from "assemblyai";
+
+
+const client = new AssemblyAI({
+    apiKey: "df0ffa09c65147adb784ba334d2b34f0"
+})
+
 
 export async function getChats(
 ) : Promise<Chat[]> {
